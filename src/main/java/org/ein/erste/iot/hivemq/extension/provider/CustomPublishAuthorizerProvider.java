@@ -10,10 +10,17 @@ import com.hivemq.extension.sdk.api.services.auth.provider.AuthenticatorProvider
 import com.hivemq.extension.sdk.api.services.auth.provider.AuthorizerProvider;
 import org.ein.erste.iot.hivemq.extension.CustomAuthenticator;
 import org.ein.erste.iot.hivemq.extension.CustomPublishAuthorizer;
+import org.ein.erste.iot.hivemq.extension.util.ConfigFile;
 
 public class CustomPublishAuthorizerProvider implements AuthorizerProvider {
+
+    private ConfigFile config;
+    public CustomPublishAuthorizerProvider(ConfigFile config) {
+        this.config = config;
+    }
+
     @Override
     public @Nullable Authorizer getAuthorizer(@NotNull AuthorizerProviderInput authorizerProviderInput) {
-        return new CustomPublishAuthorizer();
+        return new CustomPublishAuthorizer(config);
     }
 }
