@@ -32,6 +32,9 @@ public class CustomPublishAuthorizer implements PublishAuthorizer {
     }
 
     private boolean checkAuthorization(String clientId, String topicName) {
+        if (config.logstashLogin().equals(clientId) && topicName.equals(ConfigFile.LOGSTASH_TOPIC)) {
+            return true;
+        }
         try {
             OkHttpClient client = new OkHttpClient();
             MediaType JSON = MediaType.get("application/json; charset=utf-8");
@@ -40,7 +43,7 @@ public class CustomPublishAuthorizer implements PublishAuthorizer {
 
             RequestBody body = RequestBody.create(jsonMapper.writeValueAsString(requestBody), JSON);
             Request request = new Request.Builder()
-                    .url(config.url() + "/authenticate")
+                    .url(config.url() + "/api/iot/mqtt/authenticate")
                     .addHeader("Hivemq-Auth", config.apiKey())
                     .post(body)
                     .build();

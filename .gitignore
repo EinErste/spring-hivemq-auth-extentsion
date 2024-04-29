@@ -26,3 +26,6 @@ replay_pid*
 .idea
 target
 spring-hivemq-auth-extentsion.iml
+elastic_stack
+hivemq_distro
+src/main/resources/auth-config.ini

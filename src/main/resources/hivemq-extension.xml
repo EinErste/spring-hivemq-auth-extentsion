@@ -1,9 +1,11 @@
-<extension>
-    <id>org.ein.erste.iot.hivemq.extension</id>
-    <name>Custom Authentication Extension</name>
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<hivemq-extension>
+    <id>spring-hivemq-auth-extentsion</id>
+    <name>spring-hivemq-auth-extentsion</name>
     <version>1.0.0</version>
     <priority>1000</priority>
     <startPriority>1000</startPriority>
     <mainClass>org.ein.erste.iot.hivemq.extension.MyExtensionMain</mainClass>
     <author>Me</author>
-</extension>
+</hivemq-extension>

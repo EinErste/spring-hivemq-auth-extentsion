@@ -10,6 +10,8 @@ import org.ein.erste.iot.hivemq.extension.util.AuthenticateRequest;
 import org.ein.erste.iot.hivemq.extension.util.ConfigFile;
 
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.StandardCharsets;
 
 public class CustomAuthenticator implements SimpleAuthenticator {
 
@@ -22,16 +24,23 @@ public class CustomAuthenticator implements SimpleAuthenticator {
     @Override
     public void onConnect(@NotNull SimpleAuthInput simpleAuthInput, @NotNull SimpleAuthOutput simpleAuthOutput) {
         String clientId = new String(simpleAuthInput.getConnectPacket().getClientId());
-        String password = new String(simpleAuthInput.getConnectPacket().getPassword().orElse(ByteBuffer.allocate(1)).asCharBuffer().array());
+        var passwordBytes = simpleAuthInput.getConnectPacket().getPassword();
+        if (passwordBytes.isEmpty()) simpleAuthOutput.failAuthentication();
 
-        if (checkAuthentification(clientId, password)) {
+        CharBuffer charBuffer = StandardCharsets.US_ASCII.decode(passwordBytes.get());
+        String password = charBuffer.toString();
+
+        if (checkAuthentication(clientId, password)) {
             simpleAuthOutput.authenticateSuccessfully();
         } else {
             simpleAuthOutput.failAuthentication();
         }
     }
 
-    private boolean checkAuthentification(String clientId, String password) {
+    private boolean checkAuthentication(String clientId, String password) {
+        if (config.logstashLogin().equals(clientId) && config.logstashPassword().equals(password)) {
+            return true;
+        }
         try {
             OkHttpClient client = new OkHttpClient();
             MediaType JSON = MediaType.get("application/json; charset=utf-8");
@@ -40,7 +49,7 @@ public class CustomAuthenticator implements SimpleAuthenticator {
 
             RequestBody body = RequestBody.create(jsonMapper.writeValueAsString(requestBody), JSON);
             Request request = new Request.Builder()
-                    .url(config.url() + "/authorize")
+                    .url(config.url() + "/api/iot/mqtt/authorize")
                     .addHeader("Hivemq-Auth", config.apiKey())
                     .post(body)
                     .build();
