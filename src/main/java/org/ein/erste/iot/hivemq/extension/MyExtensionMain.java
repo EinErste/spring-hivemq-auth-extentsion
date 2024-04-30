@@ -7,17 +7,16 @@ import com.hivemq.extension.sdk.api.parameter.ExtensionStartOutput;
 import com.hivemq.extension.sdk.api.parameter.ExtensionStopInput;
 import com.hivemq.extension.sdk.api.parameter.ExtensionStopOutput;
 import com.hivemq.extension.sdk.api.services.Services;
-import com.hivemq.extension.sdk.api.services.intializer.ClientInitializer;
-import com.hivemq.extension.sdk.api.services.intializer.InitializerRegistry;
 import org.apache.commons.io.FileUtils;
-import org.ein.erste.iot.hivemq.extension.provider.CustomAuthenticatorProvider;
-import org.ein.erste.iot.hivemq.extension.provider.CustomPublishAuthorizerProvider;
 import org.ein.erste.iot.hivemq.extension.util.ConfigFile;
 
 import java.io.File;
 import java.util.List;
 
 public class MyExtensionMain implements ExtensionMain {
+    private PublishInterceptor publishInterceptor;
+
+    public static ConfigFile CONFIG;
     @Override
     public void extensionStart(@NotNull ExtensionStartInput extensionStartInput, @NotNull ExtensionStartOutput extensionStartOutput) {
         System.out.println("Custom auth extension started");
@@ -29,12 +28,17 @@ public class MyExtensionMain implements ExtensionMain {
         } catch (Exception e) {
             throw new RuntimeException("Failed to read config file", e);
         }
-        ConfigFile config = new ConfigFile(authConfigStr.get(0), authConfigStr.get(1), authConfigStr.get(2), authConfigStr.get(3));
+        CONFIG = new ConfigFile(authConfigStr.get(0),
+                                authConfigStr.get(1),
+                                authConfigStr.get(2),
+                                authConfigStr.get(3),
+                                authConfigStr.get(4));
 
-        Services.securityRegistry().setAuthenticatorProvider(new CustomAuthenticatorProvider(config));
-        Services.securityRegistry().setAuthorizerProvider(new CustomPublishAuthorizerProvider(config));
+        Services.securityRegistry().setAuthenticatorProvider(authenticatorProviderInput -> new CustomAuthenticator());
+        Services.securityRegistry().setAuthorizerProvider(authenticatorProviderInput -> new CustomPublishAuthorizer());
+        publishInterceptor = new PublishInterceptor();
         Services.initializerRegistry().setClientInitializer((initializerInput, clientContext) -> {
-            clientContext.addPublishInboundInterceptor(new PublishInterceptor());
+            clientContext.addPublishInboundInterceptor(publishInterceptor);
         });
     }
 

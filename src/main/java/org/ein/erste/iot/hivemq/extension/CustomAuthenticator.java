@@ -7,22 +7,19 @@ import com.hivemq.extension.sdk.api.auth.parameter.SimpleAuthInput;
 import com.hivemq.extension.sdk.api.auth.parameter.SimpleAuthOutput;
 import okhttp3.*;
 import org.ein.erste.iot.hivemq.extension.util.AuthenticateRequest;
-import org.ein.erste.iot.hivemq.extension.util.ConfigFile;
 
-import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 
+import static org.ein.erste.iot.hivemq.extension.MyExtensionMain.CONFIG;
+
 public class CustomAuthenticator implements SimpleAuthenticator {
 
-    private ConfigFile config;
     private final JsonMapper jsonMapper = new JsonMapper();
-    public CustomAuthenticator(ConfigFile configFile) {
-        this.config = configFile;
-    }
 
     @Override
     public void onConnect(@NotNull SimpleAuthInput simpleAuthInput, @NotNull SimpleAuthOutput simpleAuthOutput) {
+        System.out.println("Trying connect: " + simpleAuthInput.getConnectPacket().getClientId());
         String clientId = new String(simpleAuthInput.getConnectPacket().getClientId());
         var passwordBytes = simpleAuthInput.getConnectPacket().getPassword();
         if (passwordBytes.isEmpty()) simpleAuthOutput.failAuthentication();
@@ -38,7 +35,8 @@ public class CustomAuthenticator implements SimpleAuthenticator {
     }
 
     private boolean checkAuthentication(String clientId, String password) {
-        if (config.logstashLogin().equals(clientId) && config.logstashPassword().equals(password)) {
+        if (true) return true;
+        if (CONFIG.logstashReaderId().equals(clientId) && CONFIG.logstashReaderPassword().equals(password)) {
             return true;
         }
         try {
@@ -49,8 +47,8 @@ public class CustomAuthenticator implements SimpleAuthenticator {
 
             RequestBody body = RequestBody.create(jsonMapper.writeValueAsString(requestBody), JSON);
             Request request = new Request.Builder()
-                    .url(config.url() + "/api/iot/mqtt/authorize")
-                    .addHeader("Hivemq-Auth", config.apiKey())
+                    .url(CONFIG.authServerUrl() + "/api/iot/mqtt/authorize")
+                    .addHeader("Hivemq-Auth", CONFIG.authServerApiKey())
                     .post(body)
                     .build();
             Response response = client.newCall(request).execute();

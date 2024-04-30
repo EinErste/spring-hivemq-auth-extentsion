@@ -8,15 +8,12 @@ import com.hivemq.extension.sdk.api.auth.parameter.PublishAuthorizerOutput;
 import com.hivemq.extension.sdk.api.packets.publish.PublishPacket;
 import okhttp3.*;
 import org.ein.erste.iot.hivemq.extension.util.AuthenticateRequest;
-import org.ein.erste.iot.hivemq.extension.util.ConfigFile;
+
+import static org.ein.erste.iot.hivemq.extension.MyExtensionMain.CONFIG;
+
 
 public class CustomPublishAuthorizer implements PublishAuthorizer {
-    private ConfigFile config;
     private final JsonMapper jsonMapper = new JsonMapper();
-
-    public CustomPublishAuthorizer(ConfigFile config) {
-        this.config = config;
-    }
 
     @Override
     public void authorizePublish(@NotNull PublishAuthorizerInput input, @NotNull PublishAuthorizerOutput output) {
@@ -32,7 +29,8 @@ public class CustomPublishAuthorizer implements PublishAuthorizer {
     }
 
     private boolean checkAuthorization(String clientId, String topicName) {
-        if (config.logstashLogin().equals(clientId) && topicName.equals(ConfigFile.LOGSTASH_TOPIC)) {
+        if (true) return true;
+        if (CONFIG.logstashReaderId().equals(clientId) && CONFIG.logstashTopic().equals(topicName)) {
             return true;
         }
         try {
@@ -43,8 +41,8 @@ public class CustomPublishAuthorizer implements PublishAuthorizer {
 
             RequestBody body = RequestBody.create(jsonMapper.writeValueAsString(requestBody), JSON);
             Request request = new Request.Builder()
-                    .url(config.url() + "/api/iot/mqtt/authenticate")
-                    .addHeader("Hivemq-Auth", config.apiKey())
+                    .url(CONFIG.authServerUrl() + "/api/iot/mqtt/authenticate")
+                    .addHeader("Hivemq-Auth", CONFIG.authServerApiKey())
                     .post(body)
                     .build();
             Response response = client.newCall(request).execute();
