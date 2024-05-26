@@ -32,7 +32,6 @@ public class CustomSubscriptionAuthorizer implements SubscriptionAuthorizer {
     }
 
     private boolean checkAuthorization(String clientId, String topicName) {
-        if (true) return true;
         if (CONFIG.logstashReaderId().equals(clientId) && CONFIG.logstashTopic().equals(topicName)) {
             return true;
         }
